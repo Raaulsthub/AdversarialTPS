@@ -1,0 +1,11 @@
+train - raul, victor e jair
+unity replica - pedro, flavio, joão
+
+
+tem um objeto posicionado errado
+botar 2 rede uma pra cada time 
+um obstaculo no meio so
+
+ideias:
+parar o ambiente ate a bala atirada chegar
+so uma bala por vez (ate ela chegar), passar a bala no estado
