@@ -12,7 +12,7 @@ RADIUS = 20
 
 ANGLE_INCREMENT = 5
 
-BULLET_ACTION_DELAY = 1000
+BULLET_ACTION_DELAY = 200
 
 
 
@@ -30,9 +30,9 @@ class TPS(gym.Env):
         self.players = []
 
         # team zero
-        self.players.append(Shooter(RADIUS, (50, 50, 255), 0, 2, 150, RENDER_HEIGHT - 50, 50))
+        self.players.append(Shooter(RADIUS, (50, 50, 255), 0, 2, 150, RENDER_HEIGHT - 50, 100))
         # team one
-        self.players.append(Shooter(RADIUS, (255, 50, 50), 1, 2, RENDER_WIDTH - 150, 50, 50))
+        self.players.append(Shooter(RADIUS, (255, 50, 50), 1, 2, RENDER_WIDTH - 150, 50, 100))
 
         for i in range(2):
             self.players[i].gun.x = self.players[i].x + self.players[i].radius * math.cos(self.players[i].gun.angle)
@@ -77,8 +77,8 @@ class TPS(gym.Env):
                 state.append(-1)
                 state.append(-1)
 
-        self.delay0 = BULLET_ACTION_DELAY = 500
-        self.delay1 = BULLET_ACTION_DELAY = 500
+        self.delay0 = BULLET_ACTION_DELAY
+        self.delay1 = BULLET_ACTION_DELAY 
     
         return state
 
@@ -134,8 +134,9 @@ class TPS(gym.Env):
         # actions 
         self.process(action)   
 
-        reward = -1
-        
+        reward = 0
+        reward_ = 0
+
         idx = 0
         for player in self.players:
             if player:
@@ -152,7 +153,10 @@ class TPS(gym.Env):
                     for enemy in self.players:
                         if enemy and enemy != player:
                             if circleCollision(px, py, player.gun.radius / 2, enemy.x, enemy.y, enemy.radius):
-                                aim = True
+                                if player.team == 0:
+                                    reward += 5
+                                elif player.team == 1:
+                                    reward_ += 5
                                 impact = True
 
                     if ~impact:
@@ -161,11 +165,9 @@ class TPS(gym.Env):
                                 impact = True
                                 break
 
-                    px += dx * 10
-                    py += dy * 10
+                    px += dx * 5
+                    py += dy * 5
 
-                if aim:
-                    reward += 5
                          
                 for projectile in player.gun.projectiles:
                     # Calculate the trajectory of the projectile
@@ -175,8 +177,8 @@ class TPS(gym.Env):
                     # verifying hit
                     impact = False
                     while not impact and 0 <= projectile.x < RENDER_WIDTH and 0 <= projectile.y < RENDER_HEIGHT:
-                        projectile.x += dx * 5
-                        projectile.y += dy * 5
+                        projectile.x += dx * 10
+                        projectile.y += dy * 10
                         
                         # colision with an obstacle
                         for rect in self.objects:
@@ -193,7 +195,12 @@ class TPS(gym.Env):
                                         impact = True
                                         player.gun.projectiles.remove(projectile)
                                         enemy.hp -= 1
-                                        reward += 20
+                                        if player.team == 0:
+                                            reward += 20
+                                            reward_ -= 2
+                                        elif player.team == 1:
+                                            reward_ += 20
+                                            reward -= 2
                                         if enemy.hp == 0:
                                             self.players[idx] = None
                                         break
@@ -217,7 +224,7 @@ class TPS(gym.Env):
                 next_state.append(-1)
 
         done = self.verify_episode_end()
-        return next_state, reward, done, {}
+        return next_state, reward, reward_, done, {}
     
     def render(self, mode='human'):
         for event in pygame.event.get():
