@@ -18,7 +18,7 @@ if __name__ == '__main__':
 
     score_history = []
     score_history_ =[]
-    load_checkpoint = False
+    load_checkpoint = True
 
     if load_checkpoint:
         agent.load_models()
@@ -45,7 +45,7 @@ if __name__ == '__main__':
             agent.learn()
             agent_.learn()
             observation = observation_
-            env.render()
+            #env.render()
             steps += 1
         score_history.append(score)
         score_history_.append(score_)

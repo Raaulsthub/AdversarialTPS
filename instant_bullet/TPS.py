@@ -22,7 +22,7 @@ class TPS(gym.Env):
         self.observation_space = gym.spaces.Box(low=0, high=1, shape=(6,))
 
         # render
-        self.screen = pygame.display.set_mode((RENDER_HEIGHT, RENDER_WIDTH))
+        # self.screen = pygame.display.set_mode((RENDER_HEIGHT, RENDER_WIDTH))
 
         # initial state
 
@@ -204,7 +204,7 @@ class TPS(gym.Env):
                                         if enemy.hp == 0:
                                             self.players[idx] = None
                                         break
-                        self.render()
+                        #self.render()
                                     
                     # Remove the projectile if it goes out of bounds
                     if not impact:
@@ -226,7 +226,7 @@ class TPS(gym.Env):
         done = self.verify_episode_end()
         return next_state, reward, reward_, done, {}
     
-    def render(self, mode='human'):
+    '''def render(self, mode='human'):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
@@ -244,7 +244,7 @@ class TPS(gym.Env):
             pygame.draw.rect(self.screen, (0, 0, 0), i)
 
         pygame.display.flip()
-        return True
+        return True'''
 
     def close(self):
         pygame.quit()
