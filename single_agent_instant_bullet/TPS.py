@@ -10,11 +10,13 @@ RENDER_WIDTH = 600
 RENDER_HEIGHT = 600
 RADIUS = 20
 
-ANGLE_INCREMENT = 0.1
+ANGLE_INCREMENT = 0.2
 ANGLE_SCALE = 360
 
-BULLET_ACTION_DELAY = 200
-AGENT_SPEED = 3
+BULLET_ACTION_DELAY = 150
+AGENT_SPEED = 10
+
+MAX_STEP = 750
 
 
 
@@ -29,9 +31,9 @@ class TPS(gym.Env):
 
         # enemies and player
         self.enemies = []
-        self.enemies.append(Shooter(RADIUS, (200, 50, 50), 0, 2, RENDER_WIDTH - 150, 50, 0))
-        self.enemies.append(Shooter(RADIUS, (200, 50, 50), 0, 2, 150, 50, 0))
-        self.agent = Shooter(RADIUS, (50, 50, 200), 0, 2, RENDER_WIDTH // 2, RENDER_HEIGHT - 50, AGENT_SPEED)
+        self.enemies.append(Shooter(RADIUS, (200, 50, 50), 0, 1, RENDER_WIDTH - 150, 50, 0))
+        self.enemies.append(Shooter(RADIUS, (200, 50, 50), 0, 1, 150, 50, 0))
+        self.agent = Shooter(RADIUS, (50, 50, 200), 0, 1, RENDER_WIDTH // 2, RENDER_HEIGHT - 50, AGENT_SPEED)
 
 
         self.agent.gun.x = self.agent.x + self.agent.radius * math.cos(self.agent.gun.angle)
@@ -42,17 +44,14 @@ class TPS(gym.Env):
 
 
 
-        center_rect = pygame.Rect(RENDER_WIDTH // 2 - 100, RENDER_HEIGHT // 2 - 30, 100, 30)
-        left_rect = pygame.Rect(RENDER_WIDTH // 4 - 100, RENDER_HEIGHT // 2 - 30, 100, 30)
-        right_rect = pygame.Rect(RENDER_WIDTH * 3 // 4 - 100, RENDER_HEIGHT // 2 - 30, 100, 30)
-
-        self.objects = [center_rect, left_rect, right_rect]
+        center_rect = pygame.Rect(RENDER_WIDTH // 2 - 200, RENDER_HEIGHT // 2 - 60, 400, 60)
+        self.objects = [center_rect]
 
 
-
+        self.nsteps = 0
 
         # shoot delay
-        self.shoot_delay = BULLET_ACTION_DELAY = 400
+        self.shoot_delay = BULLET_ACTION_DELAY
 
 
     def reset(self):
@@ -95,11 +94,17 @@ class TPS(gym.Env):
 
     
     def verify_episode_end(self):
+        if (self.nsteps == MAX_STEP):
+            self.nsteps = 0
+            print("Finished by step limit")
+            return True
+        self.nsteps += 1
         alive = len(self.enemies)
         for enemy in self.enemies:
             if enemy is None:
                 alive -= 1
         if alive == 0:
+            print("Shot at all red dots")
             return True
         return False
 
@@ -108,11 +113,36 @@ class TPS(gym.Env):
         # actions 
         self.process(action)
 
-        reward = -0.1
+        reward = 0
 
-        idx = 0
+        max_dist = math.sqrt(RENDER_WIDTH ** 2 + RENDER_HEIGHT ** 2)
+        for enemy in self.enemies:
+            reward -= (math.sqrt((self.agent.x - enemy.x) ** 2 + (self.agent.y - enemy.y) ** 2)) / max_dist
+
+
+       # check if player is pointing at the enemies direction
         self.agent.updateGunPosition()
+        # verify aim
+        impact = False
+        aim = False
+        px = self.agent.gun.x
+        py = self.agent.gun.y
+        dx = math.cos(self.agent.gun.angle)
+        dy = math.sin(self.agent.gun.angle)
 
+        while not impact and 0 <= px < RENDER_WIDTH and 0 <= py < RENDER_HEIGHT:
+            for enemy in self.enemies:
+                if enemy:
+                    if circleCollision(px, py, self.agent.gun.radius, enemy.x, enemy.y, enemy.radius):
+                        reward += 5
+                        impact = True
+
+
+            px += dx * 1
+            py += dy * 1
+        
+
+        
         for projectile in self.agent.gun.projectiles:
             # Calculate the trajectory of the projectile
             dx = math.cos(projectile.angle)
@@ -121,8 +151,9 @@ class TPS(gym.Env):
             # verifying hit
             impact = False
             while not impact and 0 <= projectile.x < RENDER_WIDTH and 0 <= projectile.y < RENDER_HEIGHT:
-                projectile.x += dx * 2
-                projectile.y += dy * 2
+                projectile.x += dx * 0.5
+                projectile.y += dy * 0.5
+                self.render()
                 
                 # colision with an obstacle
                 for rect in self.objects:
@@ -132,7 +163,7 @@ class TPS(gym.Env):
                         break
                 
                 if not impact:
-                    # Check for collision with an enemie
+                    # Check for collision with an enemy
                     for enemy in self.enemies:
                         if enemy:
                             if circleCollision(projectile.x, projectile.y, projectile.radius, enemy.x, enemy.y, enemy.radius):
@@ -142,14 +173,13 @@ class TPS(gym.Env):
                                 reward += 20
 
                                 if enemy.hp == 0:
-                                    self.enemies[idx] = None
+                                    enemy = None
                                 break
-                self.render()
                             
             # Remove the projectile if it goes out of bounds
             if not impact:
                 self.agent.gun.projectiles.remove(projectile)
-                idx += 1
+
 
 
         next_state = []
@@ -180,7 +210,8 @@ class TPS(gym.Env):
 
             # enemies
             for enemy in self.enemies:
-                pygame.draw.circle(self.screen, enemy.color, (enemy.x, enemy.y), enemy.radius)
+                if enemy:
+                    pygame.draw.circle(self.screen, enemy.color, (enemy.x, enemy.y), enemy.radius)
         
             for i in self.objects:
                 pygame.draw.rect(self.screen, (0, 0, 0), i)

@@ -10,7 +10,7 @@ if __name__ == '__main__':
     agent = Agent(input_dims=env.observation_space.shape,
                     env=env, n_actions=env.action_space.shape[0])
 
-    n_games = 2000
+    n_games = 10000
     filename = 'vss.png'
     figure_file = 'plots/' + filename
 
@@ -26,9 +26,8 @@ if __name__ == '__main__':
         observation = env.reset()
         done = False
         score = 0
-        score_ = 0
         steps = 0
-        while done == False and steps < 5000:
+        while done == False:
             action = agent.choose_action(observation)
             observation_, reward, done, info = env.step(action)
             score += reward
@@ -47,6 +46,6 @@ if __name__ == '__main__':
         agent.save_models()
         
         plt.plot(np.arange(len(avg_scores)), avg_scores)
-        plt.savefig('./plots/leaning_curve.png')
+        plt.savefig('./plots/learning_curve.png')
         
 

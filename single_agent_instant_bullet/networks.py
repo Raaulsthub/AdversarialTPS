@@ -8,7 +8,7 @@ import numpy as np
 
 # Critico
 class CriticNetwork(nn.Module):
-    def __init__(self, beta, input_dims, n_actions, fc1_dims=1024, fc2_dims=1024,
+    def __init__(self, beta, input_dims, n_actions, fc1_dims=512, fc2_dims=512,
             name='critic', chkpt_dir='tmp/sac'):
         super(CriticNetwork, self).__init__()
         # dimensao do input (posicao_bola, velocidade_bola, posicaoX_robo_1, posicaoY_robo1, vel_robo_1, ang_robo_1, posicaoX_robo_2...)
@@ -28,6 +28,7 @@ class CriticNetwork(nn.Module):
         # montando as camadas da rede
         self.fc1 = nn.Linear(self.input_dims[0]+n_actions, self.fc1_dims)
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
+        self.fc3 = nn.Linear(self.fc2_dims, self.fc2_dims)
         self.q = nn.Linear(self.fc2_dims, 1)
 
         # otimizador de treinamento
@@ -47,6 +48,8 @@ class CriticNetwork(nn.Module):
         action_value = self.fc2(action_value)
         # funcao de ativacao do output da primeira rede (no backpropagation evita da derivada zerar)
         action_value = F.relu(action_value)
+        action_value = self.fc3(action_value)
+        action_value = F.relu(action_value)
 
         # avialiacao da acao em relacao ao estado
         q = self.q(action_value)
@@ -62,7 +65,7 @@ class CriticNetwork(nn.Module):
         self.load_state_dict(T.load(self.checkpoint_file))
 
 class ValueNetwork(nn.Module):
-    def __init__(self, beta, input_dims, fc1_dims=1024, fc2_dims=1024,
+    def __init__(self, beta, input_dims, fc1_dims=512, fc2_dims=512,
             name='value', chkpt_dir='tmp/sac'):
         super(ValueNetwork, self).__init__()
         self.input_dims = input_dims
@@ -73,7 +76,8 @@ class ValueNetwork(nn.Module):
         self.checkpoint_file = os.path.join(self.checkpoint_dir, name+'_sac')
 
         self.fc1 = nn.Linear(*self.input_dims, self.fc1_dims)
-        self.fc2 = nn.Linear(self.fc1_dims, fc2_dims)
+        self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
+        self.fc3 = nn.Linear(self.fc2_dims, self.fc2_dims)
         self.v = nn.Linear(self.fc2_dims, 1)
 
         self.optimizer = optim.Adam(self.parameters(), lr=beta)
@@ -85,6 +89,8 @@ class ValueNetwork(nn.Module):
         state_value = self.fc1(state)
         state_value = F.relu(state_value)
         state_value = self.fc2(state_value)
+        state_value = F.relu(state_value)
+        state_value = self.fc3(state_value)
         state_value = F.relu(state_value)
 
         v = self.v(state_value)
@@ -101,8 +107,8 @@ class ValueNetwork(nn.Module):
 # Ator
 
 class ActorNetwork(nn.Module):
-    def __init__(self, alpha, input_dims, max_action, fc1_dims=1024, 
-            fc2_dims=1024, n_actions=2, name='actor', chkpt_dir='tmp/sac'):
+    def __init__(self, alpha, input_dims, max_action, fc1_dims=512, 
+            fc2_dims=512, n_actions=2, name='actor', chkpt_dir='tmp/sac'):
         super(ActorNetwork, self).__init__()
         self.input_dims = input_dims
         self.fc1_dims = fc1_dims
@@ -116,6 +122,7 @@ class ActorNetwork(nn.Module):
 
         self.fc1 = nn.Linear(*self.input_dims, self.fc1_dims)
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
+        self.fc3 = nn.Linear(self.fc2_dims, self.fc2_dims)
         self.mu = nn.Linear(self.fc2_dims, self.n_actions)
         self.sigma = nn.Linear(self.fc2_dims, self.n_actions)
 
@@ -133,6 +140,9 @@ class ActorNetwork(nn.Module):
         # segunda camada recebe como input o output (pos ativacao) da primeira camada e calcula o output
         prob = self.fc2(prob)
         # funcao de ativacao
+        prob = F.relu(prob)
+
+        prob = self.fc3(prob)
         prob = F.relu(prob)
 
         # utilizamos o output para calcular a curva normal (mu e sigma), utilizando um pouco de noise

@@ -30,3 +30,15 @@ def circleCollision(circleCenterX1, circleCenterY1, circleRadius1, circleCenterX
         return True
     else:
         return False 
+    
+import math
+
+def is_player_looking_at_enemy(player_center_x, player_center_y, player_radius, player_angle, enemy_center_x, enemy_center_y, enemy_radius):
+    # Calculate the angle between the player and the enemy
+    enemy_angle = math.atan2(enemy_center_y - player_center_y, enemy_center_x - player_center_x)
+    
+    # Calculate the difference between the player's angle and the angle to the enemy
+    angle_difference = abs(player_angle - enemy_angle)
+    
+    # Check if the player is looking at the enemy
+    return angle_difference <= math.pi / 18
