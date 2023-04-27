@@ -15,7 +15,7 @@ if __name__ == '__main__':
     figure_file = 'plots/' + filename
 
     score_history = []
-    load_checkpoint = False
+    load_checkpoint = True
 
     if load_checkpoint:
         agent.load_models()

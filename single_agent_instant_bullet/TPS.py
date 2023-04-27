@@ -6,8 +6,8 @@ import numpy as np
 from colisions import *
 from Shooter import Shooter
 
-RENDER_WIDTH = 600
-RENDER_HEIGHT = 600
+RENDER_WIDTH = 500
+RENDER_HEIGHT = 500
 RADIUS = 20
 
 ANGLE_INCREMENT = 0.2
@@ -16,7 +16,7 @@ ANGLE_SCALE = 360
 BULLET_ACTION_DELAY = 150
 AGENT_SPEED = 10
 
-MAX_STEP = 750
+MAX_STEP = 500
 
 
 
@@ -44,7 +44,7 @@ class TPS(gym.Env):
 
 
 
-        center_rect = pygame.Rect(RENDER_WIDTH // 2 - 200, RENDER_HEIGHT // 2 - 60, 400, 60)
+        center_rect = pygame.Rect(RENDER_WIDTH // 2 - 150, RENDER_HEIGHT // 2 - 60, 300, 60)
         self.objects = [center_rect]
 
 
@@ -117,7 +117,8 @@ class TPS(gym.Env):
 
         max_dist = math.sqrt(RENDER_WIDTH ** 2 + RENDER_HEIGHT ** 2)
         for enemy in self.enemies:
-            reward -= (math.sqrt((self.agent.x - enemy.x) ** 2 + (self.agent.y - enemy.y) ** 2)) / max_dist
+            if enemy is not None:
+                reward -= (math.sqrt((self.agent.x - enemy.x) ** 2 + (self.agent.y - enemy.y) ** 2)) / max_dist
 
 
        # check if player is pointing at the enemies direction
@@ -164,17 +165,16 @@ class TPS(gym.Env):
                 
                 if not impact:
                     # Check for collision with an enemy
+                    idx = 0
                     for enemy in self.enemies:
                         if enemy:
                             if circleCollision(projectile.x, projectile.y, projectile.radius, enemy.x, enemy.y, enemy.radius):
                                 impact = True
+                                print("Shot enemy")
                                 self.agent.gun.projectiles.remove(projectile)
-                                enemy.hp -= 1
+                                self.enemies[idx] = None
                                 reward += 20
-
-                                if enemy.hp == 0:
-                                    enemy = None
-                                break
+                        idx += 1
                             
             # Remove the projectile if it goes out of bounds
             if not impact:
