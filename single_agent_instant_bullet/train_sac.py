@@ -12,11 +12,8 @@ if __name__ == '__main__':
                     env=env, n_actions=env.action_space.shape[0])
 
     n_games = 1500
-    filename = 'vss.png'
-    figure_file = 'plots/' + filename
-
     score_history = []
-    load_checkpoint = True
+    load_checkpoint = False
 
     if load_checkpoint:
         agent.load_models()
@@ -33,10 +30,9 @@ if __name__ == '__main__':
             observation_, reward, done, info = env.step(action)
             score += reward
             agent.remember(observation, action, reward, observation_, done)
-            #agent.learn()
+            agent.learn()
             observation = observation_
             env.render()
-            time.sleep(0.05)
             steps += 1
         score_history.append(score)
 
@@ -45,9 +41,9 @@ if __name__ == '__main__':
 
 
         print('episode ', i, 'score %.1f' % score, 'avg_score %.1f' % avg_score)
-        #agent.save_models()
+        agent.save_models()
         
-        #plt.plot(np.arange(len(avg_scores)), avg_scores)
-        #plt.savefig('./plots/learning_curve.png')
+        plt.plot(np.arange(len(avg_scores)), avg_scores)
+        plt.savefig('./plots/saclearning_curve.png')
         
 

@@ -66,6 +66,7 @@ class CriticNetwork(nn.Module):
         self.input_dims = input_dims
         self.fc1_dims = fc1_dims
         self.fc2_dims = fc2_dims
+        self.fc3_dims = fc2_dims
         self.n_actions = n_actions
         self.checkpoint_file = os.path.join(chkpt_dir,name+'_ddpg')
         self.fc1 = nn.Linear(*self.input_dims, self.fc1_dims)
@@ -85,11 +86,20 @@ class CriticNetwork(nn.Module):
         #self.fc2.bias.data.uniform_(-f2, f2)
         self.bn2 = nn.LayerNorm(self.fc2_dims)
 
+        self.fc3 = nn.Linear(self.fc2_dims, self.fc3_dims)
+        f3 = 1./np.sqrt(self.fc3.weight.data.size()[0])
+        #f2 = 0.002
+        T.nn.init.uniform_(self.fc3.weight.data, -f3, f3)
+        T.nn.init.uniform_(self.fc3.bias.data, -f3, f3)
+        #self.fc2.weight.data.uniform_(-f2, f2)
+        #self.fc2.bias.data.uniform_(-f2, f2)
+        self.bn3 = nn.LayerNorm(self.fc3_dims)
+
         self.action_value = nn.Linear(self.n_actions, self.fc2_dims)
-        f3 = 0.003
-        self.q = nn.Linear(self.fc2_dims, 1)
-        T.nn.init.uniform_(self.q.weight.data, -f3, f3)
-        T.nn.init.uniform_(self.q.bias.data, -f3, f3)
+        f4 = 0.003
+        self.q = nn.Linear(self.fc3_dims, 1)
+        T.nn.init.uniform_(self.q.weight.data, -f4, f4)
+        T.nn.init.uniform_(self.q.bias.data, -f4, f4)
         #self.q.weight.data.uniform_(-f3, f3)
         #self.q.bias.data.uniform_(-f3, f3)
 
@@ -104,6 +114,8 @@ class CriticNetwork(nn.Module):
         state_value = F.relu(state_value)
         state_value = self.fc2(state_value)
         state_value = self.bn2(state_value)
+        state_value = self.fc3(state_value)
+        state_value = self.bn3(state_value)
 
         action_value = F.relu(self.action_value(action))
         state_action_value = F.relu(T.add(state_value, action_value))
@@ -112,11 +124,9 @@ class CriticNetwork(nn.Module):
         return state_action_value
 
     def save_checkpoint(self):
-        print('... saving checkpoint ...')
         T.save(self.state_dict(), self.checkpoint_file)
 
     def load_checkpoint(self):
-        print('... loading checkpoint ...')
         self.load_state_dict(T.load(self.checkpoint_file))
 
 class ActorNetwork(nn.Module):
@@ -126,6 +136,7 @@ class ActorNetwork(nn.Module):
         self.input_dims = input_dims
         self.fc1_dims = fc1_dims
         self.fc2_dims = fc2_dims
+        self.fc3_dims = fc2_dims
         self.n_actions = n_actions
         self.checkpoint_file = os.path.join(chkpt_dir,name+'_ddpg')
         self.fc1 = nn.Linear(*self.input_dims, self.fc1_dims)
@@ -145,11 +156,20 @@ class ActorNetwork(nn.Module):
         #self.fc2.bias.data.uniform_(-f2, f2)
         self.bn2 = nn.LayerNorm(self.fc2_dims)
 
+        self.fc3 = nn.Linear(self.fc2_dims, self.fc3_dims)
+        #f2 = 0.002
+        f3 = 1./np.sqrt(self.fc3.weight.data.size()[0])
+        T.nn.init.uniform_(self.fc3.weight.data, -f3, f3)
+        T.nn.init.uniform_(self.fc3.bias.data, -f3, f3)
+        #self.fc2.weight.data.uniform_(-f2, f2)
+        #self.fc2.bias.data.uniform_(-f2, f2)
+        self.bn3 = nn.LayerNorm(self.fc3_dims)
+
         #f3 = 0.004
-        f3 = 0.003
-        self.mu = nn.Linear(self.fc2_dims, self.n_actions)
-        T.nn.init.uniform_(self.mu.weight.data, -f3, f3)
-        T.nn.init.uniform_(self.mu.bias.data, -f3, f3)
+        f4 = 0.003
+        self.mu = nn.Linear(self.fc3_dims, self.n_actions)
+        T.nn.init.uniform_(self.mu.weight.data, -f4, f4)
+        T.nn.init.uniform_(self.mu.bias.data, -f4, f4)
         #self.mu.weight.data.uniform_(-f3, f3)
         #self.mu.bias.data.uniform_(-f3, f3)
 
@@ -165,22 +185,23 @@ class ActorNetwork(nn.Module):
         x = self.fc2(x)
         x = self.bn2(x)
         x = F.relu(x)
+        x = self.fc3(x)
+        x = self.bn3(x)
+        x = F.relu(x)
         x = T.tanh(self.mu(x))
 
         return x
 
     def save_checkpoint(self):
-        print('... saving checkpoint ...')
         T.save(self.state_dict(), self.checkpoint_file)
 
     def load_checkpoint(self):
-        print('... loading checkpoint ...')
         self.load_state_dict(T.load(self.checkpoint_file))
 
 class Agent(object):
     def __init__(self, alpha, beta, input_dims, tau, env, gamma=0.99,
-                 n_actions=2, max_size=1000000, layer1_size=400,
-                 layer2_size=300, batch_size=64):
+                 n_actions=2, max_size=100000, layer1_size=512,
+                 layer2_size=512, batch_size=64):
         self.gamma = gamma
         self.tau = tau
         self.memory = ReplayBuffer(max_size, input_dims, n_actions)
@@ -300,12 +321,14 @@ class Agent(object):
         input()
         """
     def save_models(self):
+        print('... saving checkpoint ...')
         self.actor.save_checkpoint()
         self.target_actor.save_checkpoint()
         self.critic.save_checkpoint()
         self.target_critic.save_checkpoint()
 
     def load_models(self):
+        print('... loading checkpoint ...')
         self.actor.load_checkpoint()
         self.target_actor.load_checkpoint()
         self.critic.load_checkpoint()

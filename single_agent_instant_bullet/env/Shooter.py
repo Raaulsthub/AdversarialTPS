@@ -11,7 +11,7 @@ class Shooter:
         self.hp = hp
         self.x = x
         self.y = y
-        self.gun = Gun(10, 120, 4, 0, 0)
+        self.gun = Gun(10, 180, 4, 0, 0)
         self.speed = speed
     
     def move(self, env, speed, width, height):

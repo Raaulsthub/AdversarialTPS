@@ -13,10 +13,10 @@ RADIUS = 20
 ANGLE_INCREMENT = 0.2
 ANGLE_SCALE = 360
 
-BULLET_ACTION_DELAY = 150
+BULLET_ACTION_DELAY = 40
 AGENT_SPEED = 10
 
-MAX_STEP = 300
+MAX_STEP = 200
 
 
 
@@ -125,7 +125,7 @@ class TPS(gym.Env):
         max_dist = math.sqrt(RENDER_WIDTH ** 2 + RENDER_HEIGHT ** 2)
         for enemy in self.enemies:
             if enemy is not None:
-                reward -= (math.sqrt((self.agent.x - enemy.x) ** 2 + (self.agent.y - enemy.y) ** 2)) / max_dist
+                reward -= 0.1 * (math.sqrt((self.agent.x - enemy.x) ** 2 + (self.agent.y - enemy.y) ** 2)) / max_dist
 
 
        # check if player is pointing at the enemies direction
@@ -180,7 +180,7 @@ class TPS(gym.Env):
                                 print("Shot enemy")
                                 self.agent.gun.projectiles.remove(projectile)
                                 self.enemies[idx] = None
-                                reward += 1000
+                                reward += 100
                                 break
                         idx += 1
                             
