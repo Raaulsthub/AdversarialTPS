@@ -6,8 +6,8 @@ import numpy as np
 from env.colisions import *
 from env.Shooter import Shooter
 
-RENDER_WIDTH = 400
-RENDER_HEIGHT = 400
+RENDER_WIDTH = 300
+RENDER_HEIGHT = 300
 RADIUS = 20
 
 ANGLE_INCREMENT = 0.2
@@ -16,7 +16,7 @@ ANGLE_SCALE = 360
 BULLET_ACTION_DELAY = 150
 AGENT_SPEED = 10
 
-MAX_STEP = 500
+MAX_STEP = 300
 
 
 
@@ -24,7 +24,7 @@ MAX_STEP = 500
 class TPS(gym.Env):
     def __init__(self, render_mode='human'):
         self.action_space = gym.spaces.Box(low=-1, high=1, shape=(3,))
-        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(7,))
+        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(5,))
         self.render_mode = render_mode
 
         if render_mode == 'human':
@@ -32,9 +32,9 @@ class TPS(gym.Env):
 
         # enemies and player
         self.enemies = []
-        self.enemies.append(Shooter(RADIUS, (200, 50, 50), 0, 1, RENDER_WIDTH - 50, 50, 0))
-        self.enemies.append(Shooter(RADIUS, (200, 50, 50), 0, 1, 50, 50, 0))
-        self.agent = Shooter(RADIUS, (50, 50, 200), 0, 1, RENDER_WIDTH // 2, RENDER_HEIGHT - 50, AGENT_SPEED)
+        self.enemies.append(Shooter(RADIUS, (200, 50, 50), 0, 1, RENDER_WIDTH -  RADIUS/2, RENDER_HEIGHT // 2 - RADIUS//2, 0))
+        #self.enemies.append(Shooter(RADIUS, (200, 50, 50), 0, 1, 50, 50, 0))
+        self.agent = Shooter(RADIUS, (50, 50, 200), 0, 1, RENDER_WIDTH // 2 - RADIUS/2, RENDER_HEIGHT // 2 - RADIUS//2, AGENT_SPEED)
 
 
         self.agent.gun.x = self.agent.x + self.agent.radius * math.cos(self.agent.gun.angle)
@@ -57,8 +57,12 @@ class TPS(gym.Env):
 
     def reset(self):
         # returning to initial positions
-        self.enemies[0] = Shooter(RADIUS, (200, 50, 50), 0, 2, RENDER_WIDTH - 50, 50, 0)
-        self.enemies[1] = Shooter(RADIUS, (200, 50, 50), 0, 2, 50, 50, 0)
+        self.enemies[0] = Shooter(RADIUS, (200, 50, 50), 0, 2,
+                                  RENDER_WIDTH - np.random.randint(0, RENDER_WIDTH - RADIUS),
+                                  np.random.randint(0, RENDER_HEIGHT/2), 0)
+        #self.enemies[1] = Shooter(RADIUS, (200, 50, 50), 0, 2,
+        #                         np.random.randint(0, RENDER_WIDTH - RADIUS),
+        #                         np.random.randint(0, RENDER_HEIGHT/2), 0)
         self.agent = Shooter(RADIUS, (50, 50, 200), 0, 2, RENDER_WIDTH // 2, RENDER_HEIGHT - 50, AGENT_SPEED)
 
         self.agent.gun.x = self.agent.x + self.agent.radius * math.cos(self.agent.gun.angle)
@@ -80,7 +84,7 @@ class TPS(gym.Env):
     
         return state
 
-    def process(self, action):
+    def process(self, action, reward):
         # action [0] = linear velocity player -> 1 = move forward, 0 = dont move
         # action [1] = angular velocity increment player -> 1 = increment, 0 = dont increment, -1 decrement
         # action [2] = player shoot -> 1 = shoot, 0 = do not shoot
@@ -88,10 +92,12 @@ class TPS(gym.Env):
         self.agent.move(self, np.abs(action[0] * AGENT_SPEED), RENDER_WIDTH, RENDER_HEIGHT)
         self.agent.gun.angle += action[1] * ANGLE_INCREMENT
         if action[2] > 0 and self.shoot_delay <= 0:
+            reward += 1
             self.agent.gun.shoot()
             self.shoot_delay = BULLET_ACTION_DELAY
 
         self.shoot_delay -= 1
+        return reward
 
     
     def verify_episode_end(self):
@@ -112,9 +118,9 @@ class TPS(gym.Env):
         
     def step(self, action):
         # actions 
-        self.process(action)
-
         reward = 0
+        reward = self.process(action, reward)
+
 
         max_dist = math.sqrt(RENDER_WIDTH ** 2 + RENDER_HEIGHT ** 2)
         for enemy in self.enemies:
@@ -136,7 +142,7 @@ class TPS(gym.Env):
             for enemy in self.enemies:
                 if enemy:
                     if circleCollision(px, py, self.agent.gun.radius, enemy.x, enemy.y, enemy.radius):
-                        reward += 5
+                        reward += 2
                         impact = True
 
 
@@ -175,11 +181,13 @@ class TPS(gym.Env):
                                 self.agent.gun.projectiles.remove(projectile)
                                 self.enemies[idx] = None
                                 reward += 1000
+                                break
                         idx += 1
                             
             # Remove the projectile if it goes out of bounds
             if not impact:
-                self.agent.gun.projectiles.remove(projectile)
+                if projectile:
+                    self.agent.gun.projectiles.remove(projectile)
 
 
 

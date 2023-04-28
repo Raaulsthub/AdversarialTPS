@@ -1,6 +1,7 @@
 IDEAS:
-	random environment
+	random environment - FEITO
 	aumentar reward do tiro ou diminuir da olhada
+	mudar a estrutura pra 2 camadas de 1024
 
 NEURAL NETS:
 	Deep Deterministic Policy Gradient (DDPG): DDPG is a model-free, off-policy algorithm that is designed to handle continuous action spaces. It uses a deep neural network to approximate both the Q-value and the policy, and learns to minimize the mean squared error between the predicted Q-value and the target Q-value.
