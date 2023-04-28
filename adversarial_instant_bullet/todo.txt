@@ -1,8 +1,0 @@
-train - raul, victor e jair
-unity replica - pedro, flavio, joão, deivis
-
-
-IDEIAS:
-reward por se aproximar do oponente
-WORLD MODELS
-movimento lateral
