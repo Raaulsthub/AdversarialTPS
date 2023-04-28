@@ -10,12 +10,12 @@ if __name__ == '__main__':
     agent = Agent(input_dims=env.observation_space.shape,
                     env=env, n_actions=env.action_space.shape[0])
 
-    n_games = 1500
+    n_games = 750
     filename = 'vss.png'
     figure_file = 'plots/' + filename
 
     score_history = []
-    load_checkpoint = True
+    load_checkpoint = False
 
     if load_checkpoint:
         agent.load_models()
@@ -46,6 +46,6 @@ if __name__ == '__main__':
         agent.save_models()
         
         plt.plot(np.arange(len(avg_scores)), avg_scores)
-        plt.savefig('./plots/learning_curve.png')
+        plt.savefig('./plots/sac/learning_curve.png')
         
 

@@ -174,7 +174,7 @@ class TPS(gym.Env):
                                 print("Shot enemy")
                                 self.agent.gun.projectiles.remove(projectile)
                                 self.enemies[idx] = None
-                                reward += 20
+                                reward += 1000
                         idx += 1
                             
             # Remove the projectile if it goes out of bounds
