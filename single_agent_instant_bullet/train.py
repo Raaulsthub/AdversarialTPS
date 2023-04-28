@@ -10,7 +10,7 @@ if __name__ == '__main__':
     agent = Agent(input_dims=env.observation_space.shape,
                     env=env, n_actions=env.action_space.shape[0])
 
-    n_games = 10000
+    n_games = 1500
     filename = 'vss.png'
     figure_file = 'plots/' + filename
 
@@ -34,7 +34,7 @@ if __name__ == '__main__':
             agent.remember(observation, action, reward, observation_, done)
             agent.learn()
             observation = observation_
-            env.render()
+            # env.render()
             steps += 1
         score_history.append(score)
 

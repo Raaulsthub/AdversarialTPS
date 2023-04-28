@@ -27,7 +27,7 @@ class TPS(gym.Env):
         self.observation_space = gym.spaces.Box(low=0, high=1, shape=(7,))
 
         # render
-        self.screen = pygame.display.set_mode((RENDER_HEIGHT, RENDER_WIDTH))
+        # self.screen = pygame.display.set_mode((RENDER_HEIGHT, RENDER_WIDTH))
 
         # enemies and player
         self.enemies = []
@@ -154,7 +154,7 @@ class TPS(gym.Env):
             while not impact and 0 <= projectile.x < RENDER_WIDTH and 0 <= projectile.y < RENDER_HEIGHT:
                 projectile.x += dx * 0.5
                 projectile.y += dy * 0.5
-                self.render()
+                # self.render()
                 
                 # colision with an obstacle
                 for rect in self.objects:
