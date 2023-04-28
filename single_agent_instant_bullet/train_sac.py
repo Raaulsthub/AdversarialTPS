@@ -1,8 +1,8 @@
 import numpy as np
-from sac_torch import Agent
+from sac.sac_torch import Agent
 from utils import plot_learning_curve
 from gym import wrappers
-from TPS import TPS
+from env.TPS import TPS
 from matplotlib import pyplot as plt
 
 if __name__ == '__main__':
@@ -34,7 +34,7 @@ if __name__ == '__main__':
             agent.remember(observation, action, reward, observation_, done)
             agent.learn()
             observation = observation_
-            # env.render()
+            env.render()
             steps += 1
         score_history.append(score)
 

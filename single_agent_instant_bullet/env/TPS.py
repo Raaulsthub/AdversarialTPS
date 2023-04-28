@@ -3,11 +3,11 @@ import gym
 import math
 import numpy as np
 
-from colisions import *
-from Shooter import Shooter
+from env.colisions import *
+from env.Shooter import Shooter
 
-RENDER_WIDTH = 500
-RENDER_HEIGHT = 500
+RENDER_WIDTH = 400
+RENDER_HEIGHT = 400
 RADIUS = 20
 
 ANGLE_INCREMENT = 0.2
@@ -22,17 +22,18 @@ MAX_STEP = 500
 
 
 class TPS(gym.Env):
-    def __init__(self):
+    def __init__(self, render_mode='human'):
         self.action_space = gym.spaces.Box(low=-1, high=1, shape=(3,))
         self.observation_space = gym.spaces.Box(low=0, high=1, shape=(7,))
+        self.render_mode = render_mode
 
-        # render
-        # self.screen = pygame.display.set_mode((RENDER_HEIGHT, RENDER_WIDTH))
+        if render_mode == 'human':
+            self.screen = pygame.display.set_mode((RENDER_HEIGHT, RENDER_WIDTH))
 
         # enemies and player
         self.enemies = []
-        self.enemies.append(Shooter(RADIUS, (200, 50, 50), 0, 1, RENDER_WIDTH - 150, 50, 0))
-        self.enemies.append(Shooter(RADIUS, (200, 50, 50), 0, 1, 150, 50, 0))
+        self.enemies.append(Shooter(RADIUS, (200, 50, 50), 0, 1, RENDER_WIDTH - 50, 50, 0))
+        self.enemies.append(Shooter(RADIUS, (200, 50, 50), 0, 1, 50, 50, 0))
         self.agent = Shooter(RADIUS, (50, 50, 200), 0, 1, RENDER_WIDTH // 2, RENDER_HEIGHT - 50, AGENT_SPEED)
 
 
@@ -44,8 +45,8 @@ class TPS(gym.Env):
 
 
 
-        center_rect = pygame.Rect(RENDER_WIDTH // 2 - 150, RENDER_HEIGHT // 2 - 60, 300, 60)
-        self.objects = [center_rect]
+        #center_rect = pygame.Rect(RENDER_WIDTH // 2 - 150, RENDER_HEIGHT // 2 - 60, 300, 60)
+        self.objects = []
 
 
         self.nsteps = 0
@@ -56,8 +57,8 @@ class TPS(gym.Env):
 
     def reset(self):
         # returning to initial positions
-        self.enemies[0] = Shooter(RADIUS, (200, 50, 50), 0, 2, RENDER_WIDTH - 150, 50, 0)
-        self.enemies[1] = Shooter(RADIUS, (200, 50, 50), 0, 2, 150, 50, 0)
+        self.enemies[0] = Shooter(RADIUS, (200, 50, 50), 0, 2, RENDER_WIDTH - 50, 50, 0)
+        self.enemies[1] = Shooter(RADIUS, (200, 50, 50), 0, 2, 50, 50, 0)
         self.agent = Shooter(RADIUS, (50, 50, 200), 0, 2, RENDER_WIDTH // 2, RENDER_HEIGHT - 50, AGENT_SPEED)
 
         self.agent.gun.x = self.agent.x + self.agent.radius * math.cos(self.agent.gun.angle)
@@ -154,7 +155,7 @@ class TPS(gym.Env):
             while not impact and 0 <= projectile.x < RENDER_WIDTH and 0 <= projectile.y < RENDER_HEIGHT:
                 projectile.x += dx * 0.5
                 projectile.y += dy * 0.5
-                # self.render()
+                self.render()
                 
                 # colision with an obstacle
                 for rect in self.objects:
