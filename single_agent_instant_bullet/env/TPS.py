@@ -32,9 +32,9 @@ class TPS(gym.Env):
 
         # enemies and player
         self.enemies = []
-        self.enemies.append(Shooter(RADIUS, (200, 50, 50), 0, 1, RENDER_WIDTH -  RADIUS/2, RENDER_HEIGHT // 2 - RADIUS//2, 0))
+        self.enemies.append(Shooter(RADIUS, (200, 50, 50), 0, 1, RENDER_WIDTH -  RADIUS//2, RENDER_HEIGHT // 3 - RADIUS//2, 0))
         #self.enemies.append(Shooter(RADIUS, (200, 50, 50), 0, 1, 50, 50, 0))
-        self.agent = Shooter(RADIUS, (50, 50, 200), 0, 1, RENDER_WIDTH // 2 - RADIUS/2, RENDER_HEIGHT // 2 - RADIUS//2, AGENT_SPEED)
+        self.agent = Shooter(RADIUS, (50, 50, 200), 0, 1, RENDER_WIDTH // 2 - RADIUS//2, RENDER_HEIGHT // 2 - RADIUS//2, AGENT_SPEED)
 
 
         self.agent.gun.x = self.agent.x + self.agent.radius * math.cos(self.agent.gun.angle)
@@ -45,7 +45,7 @@ class TPS(gym.Env):
 
 
 
-        #center_rect = pygame.Rect(RENDER_WIDTH // 2 - 150, RENDER_HEIGHT // 2 - 60, 300, 60)
+        #center_rect = pygame.Rect(RENDER_WIDTH // 2 - 100, RENDER_HEIGHT // 2 - 10, 200, 20)
         self.objects = []
 
 
@@ -58,8 +58,8 @@ class TPS(gym.Env):
     def reset(self):
         # returning to initial positions
         self.enemies[0] = Shooter(RADIUS, (200, 50, 50), 0, 2,
-                                  RENDER_WIDTH - np.random.randint(0, RENDER_WIDTH - RADIUS),
-                                  np.random.randint(0, RENDER_HEIGHT/2), 0)
+                                  RENDER_WIDTH - np.random.randint(0, RENDER_WIDTH - RADIUS//2),
+                                  np.random.randint(0, RENDER_HEIGHT//3 - RADIUS//2), 0)
         #self.enemies[1] = Shooter(RADIUS, (200, 50, 50), 0, 2,
         #                         np.random.randint(0, RENDER_WIDTH - RADIUS),
         #                         np.random.randint(0, RENDER_HEIGHT/2), 0)

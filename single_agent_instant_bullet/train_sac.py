@@ -19,6 +19,9 @@ if __name__ == '__main__':
         agent.load_models()
 
     avg_scores = []
+    best_score = -np.inf
+    patience = 50
+    early_stop = False
     
     for i in range(n_games):
         observation = env.reset()
@@ -39,11 +42,22 @@ if __name__ == '__main__':
         avg_score = np.mean(score_history[-100:])
         avg_scores.append(avg_score)
 
-
         print('episode ', i, 'score %.1f' % score, 'avg_score %.1f' % avg_score)
-        agent.save_models()
-        
+        if avg_score > best_score:
+            best_score = avg_score
+            agent.save_models()
+            patience = 50  # reset patience
+        elif i > 100:
+            patience -= 1  # reduce patience
+            if patience == 0:
+                early_stop = True
+                print("Training stopped early")
+                break
+
+        if early_stop:
+            break
+    
         plt.plot(np.arange(len(avg_scores)), avg_scores)
         plt.savefig('./plots/saclearning_curve.png')
-        
+
 
