@@ -24,7 +24,7 @@ MAX_STEP = 80
 class TPS(gym.Env):
     def __init__(self, render_mode='human'):
         self.action_space = gym.spaces.Box(low=-1, high=1, shape=(2,))
-        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(13,))
+        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(14,))
         self.render_mode = render_mode
 
         if render_mode == 'human':
@@ -91,6 +91,7 @@ class TPS(gym.Env):
         state.append(-1)
         state.append(-1)
 
+        state.append(-1)
         self.shoot_delay = BULLET_ACTION_DELAY
     
         return state
@@ -153,14 +154,20 @@ class TPS(gym.Env):
             for enemy in self.enemies:
                 if enemy:
                     if circleCollision(px, py, self.agent.gun.radius, enemy.x, enemy.y, enemy.radius):
-                        reward += 2
+                        aim = True
                         impact = True
-
-
+        
+            # colision with an obstacle
+            for rect in self.objects:
+                if circle_rect_collision(px, py, self.agent.gun.radius, rect.left, rect.top, rect.width, rect.height):
+                    aim = False
+                    impact = True
+                    break
+            
             px += dx * 1
             py += dy * 1
-        
 
+        print(aim)
         
         for projectile in self.agent.gun.projectiles:
             # Calculate the trajectory of the projectile
@@ -225,6 +232,12 @@ class TPS(gym.Env):
         next_state.append(-1)
         next_state.append(-1)
         next_state.append(-1)
+
+        if aim == True:
+            next_state.append(1)
+        else:
+            next_state.append(-1)
+
         done = self.verify_episode_end()
         return next_state, reward, done, {}
     

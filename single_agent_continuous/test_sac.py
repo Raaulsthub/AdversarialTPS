@@ -2,7 +2,7 @@ import numpy as np
 from sac.sac_torch import Agent
 from utils import plot_learning_curve
 from gym import wrappers
-from env.TPS import TPS
+from env_.TPS import TPS
 from matplotlib import pyplot as plt
 import time
 import pandas as pd
