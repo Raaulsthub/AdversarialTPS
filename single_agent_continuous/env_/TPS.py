@@ -45,8 +45,8 @@ class TPS(gym.Env):
 
 
 
-        center_rect = pygame.Rect(RENDER_WIDTH // 2 - 100, RENDER_HEIGHT // 2 - 10, 200, 20)
-        self.objects = [center_rect]
+        #center_rect = pygame.Rect(RENDER_WIDTH // 2 - 100, RENDER_HEIGHT // 2 - 10, 200, 20)
+        self.objects = []
 
 
         self.nsteps = 0
@@ -167,7 +167,7 @@ class TPS(gym.Env):
             px += dx * 1
             py += dy * 1
 
-        print(aim)
+        #print(aim)
         
         for projectile in self.agent.gun.projectiles:
             # Calculate the trajectory of the projectile
