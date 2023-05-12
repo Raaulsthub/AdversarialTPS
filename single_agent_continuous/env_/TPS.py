@@ -45,8 +45,8 @@ class TPS(gym.Env):
 
 
 
-        #center_rect = pygame.Rect(RENDER_WIDTH // 2 - 100, RENDER_HEIGHT // 2 - 10, 200, 20)
-        self.objects = []
+        center_rect = pygame.Rect(RENDER_WIDTH // 2 - 100, RENDER_HEIGHT // 2 - 10, 200, 20)
+        self.objects = [center_rect]
 
 
         self.nsteps = 0
@@ -135,9 +135,9 @@ class TPS(gym.Env):
 
 
         max_dist = math.sqrt(RENDER_WIDTH ** 2 + RENDER_HEIGHT ** 2)
-        for enemy in self.enemies:
+        '''for enemy in self.enemies:
             if enemy is not None:
-                reward -= 0.1 * (math.sqrt((self.agent.x - enemy.x) ** 2 + (self.agent.y - enemy.y) ** 2)) / max_dist
+                reward -= 0.1 * (math.sqrt((self.agent.x - enemy.x) ** 2 + (self.agent.y - enemy.y) ** 2)) / max_dist'''
 
 
        # check if player is pointing at the enemies direction
@@ -223,10 +223,10 @@ class TPS(gym.Env):
                 next_state.append(-1)
 
         # object
-        next_state.append(-1)
-        next_state.append(-1)
-        next_state.append(-1)
-        next_state.append(-1)
+        next_state.append(self.objects[0].left)
+        next_state.append(self.objects[0].top)
+        next_state.append(self.objects[0].width)
+        next_state.append(self.objects[0].height)
         # object 2
         next_state.append(-1)
         next_state.append(-1)

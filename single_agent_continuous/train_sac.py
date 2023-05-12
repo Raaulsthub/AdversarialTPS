@@ -12,7 +12,7 @@ if __name__ == '__main__':
     agent = Agent(input_dims=env.observation_space.shape,
                     env=env, n_actions=env.action_space.shape[0])
 
-    n_games = 1500
+    n_games = 500
     score_history = []
     load_checkpoint = False
 
@@ -40,7 +40,7 @@ if __name__ == '__main__':
             steps += 1
         score_history.append(score)
 
-        avg_score = np.mean(score_history[-20:])
+        avg_score = np.mean(score_history[-10:])
         avg_scores.append(avg_score)
 
         print('episode ', i, 'score %.1f' % score, 'avg_score %.1f' % avg_score)
@@ -53,6 +53,6 @@ if __name__ == '__main__':
 
     data = {'episode': np.arange(len(score_history)), 'avg_reward': score_history}
     df = pd.DataFrame(data)
-    df.to_csv('./training_log/sac/no_object.csv', index=False)
+    df.to_csv('./training_log/sac/central_object.csv', index=False)
 
 

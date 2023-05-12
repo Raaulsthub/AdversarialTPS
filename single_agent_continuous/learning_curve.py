@@ -2,13 +2,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Load the CSV file into a DataFrame
-df = pd.read_csv('./training_log/ddpg/no_object.csv')
+df = pd.read_csv('./training_log/sac/no_object.csv')
 
 # Create a figure and axis objects
 fig, ax = plt.subplots(figsize=(10, 6))
 
 # Plot the episode and average reward
-ax.plot(df['episode'], df['avg_reward'], label='Average Reward', alpha=0.25, linewidth=4)
+ax.plot(df['episode'], df['avg_reward'], label='Average Reward', alpha=0.05, linewidth=4)
 
 # Calculate moving averages of the last 10 and 100 rewards
 ma10 = df['avg_reward'].rolling(window=10, min_periods=1).mean()
@@ -24,4 +24,4 @@ ax.set_ylabel('Average Reward')
 ax.legend()
 
 # Save the plot as a PDF file
-plt.savefig('./training_plots/ddpg/no_object.pdf', format='pdf')
+plt.savefig('./training_plots/sac/no_object.pdf', format='pdf')
