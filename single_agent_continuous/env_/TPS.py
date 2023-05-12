@@ -3,8 +3,8 @@ import gym
 import math
 import numpy as np
 
-from env.colisions import *
-from env.Shooter import Shooter
+from env_.colisions import *
+from env_.Shooter import Shooter
 
 RENDER_WIDTH = 300
 RENDER_HEIGHT = 300
@@ -45,8 +45,8 @@ class TPS(gym.Env):
 
 
 
-        #center_rect = pygame.Rect(RENDER_WIDTH // 2 - 100, RENDER_HEIGHT // 2 - 10, 200, 20)
-        self.objects = []
+        center_rect = pygame.Rect(RENDER_WIDTH // 2 - 100, RENDER_HEIGHT // 2 - 10, 200, 20)
+        self.objects = [center_rect]
 
 
         self.nsteps = 0

@@ -1,7 +1,7 @@
 import math
 
-from env.colisions import *
-from env.Gun import Gun
+from env_.colisions import *
+from env_.Gun import Gun
 
 class Shooter:
     def __init__(self, radius, color, team, hp, x, y, speed):

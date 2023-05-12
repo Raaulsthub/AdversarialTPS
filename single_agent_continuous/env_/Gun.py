@@ -1,6 +1,6 @@
 import time
 
-from env.Projectile import Projectile
+from env_.Projectile import Projectile
 
 class Gun:
     def __init__(self, radius, angle, bullet_speed, x, y):
