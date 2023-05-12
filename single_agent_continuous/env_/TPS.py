@@ -24,7 +24,7 @@ MAX_STEP = 80
 class TPS(gym.Env):
     def __init__(self, render_mode='human'):
         self.action_space = gym.spaces.Box(low=-1, high=1, shape=(2,))
-        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(14,))
+        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(11,))
         self.render_mode = render_mode
 
         if render_mode == 'human':
@@ -80,18 +80,14 @@ class TPS(gym.Env):
             state.append(float(enemy.x) / RENDER_WIDTH)
             state.append(float(enemy.y) / RENDER_HEIGHT)
 
-        # object
-        state.append(-1)
-        state.append(-1)
-        state.append(-1)
-        state.append(-1)
-        # object 2
-        state.append(-1)
-        state.append(-1)
-        state.append(-1)
-        state.append(-1)
 
-        state.append(-1)
+        state.append(0)
+        state.append(0)
+        state.append(0)
+        state.append(0)
+        state.append(0)
+        state.append(0)
+
         self.shoot_delay = BULLET_ACTION_DELAY
     
         return state
@@ -142,9 +138,16 @@ class TPS(gym.Env):
 
        # check if player is pointing at the enemies direction
         self.agent.updateGunPosition()
-        # verify aim
+        # verify aimEnemy
         impact = False
-        aim = False
+        aimEnemy = False
+        aimObject = False
+        leftAimEnemy = False
+        leftAimObject = False
+        rightAimEnemy = False
+        rightAimObject = False
+
+
         px = self.agent.gun.x
         py = self.agent.gun.y
         dx = math.cos(self.agent.gun.angle)
@@ -154,20 +157,68 @@ class TPS(gym.Env):
             for enemy in self.enemies:
                 if enemy:
                     if circleCollision(px, py, self.agent.gun.radius, enemy.x, enemy.y, enemy.radius):
-                        aim = True
+                        aimEnemy = True
                         impact = True
         
             # colision with an obstacle
             for rect in self.objects:
                 if circle_rect_collision(px, py, self.agent.gun.radius, rect.left, rect.top, rect.width, rect.height):
-                    aim = False
+                    aimEnemy = False
                     impact = True
                     break
             
             px += dx * 1
             py += dy * 1
+        
+        px = self.agent.gun.x
+        py = self.agent.gun.y
+        dx = math.cos(self.agent.gun.angle + 30)
+        dy = math.sin(self.agent.gun.angle + 30)
 
-        #print(aim)
+        impact = False
+
+        while not impact and 0 <= px < RENDER_WIDTH and 0 <= py < RENDER_HEIGHT:
+            for enemy in self.enemies:
+                if enemy:
+                    if circleCollision(px, py, self.agent.gun.radius, enemy.x, enemy.y, enemy.radius):
+                        leftAimEnemy = True
+                        impact = True
+        
+            # colision with an obstacle
+            for rect in self.objects:
+                if circle_rect_collision(px, py, self.agent.gun.radius, rect.left, rect.top, rect.width, rect.height):
+                    leftAimEnemy = False
+                    leftAimObject = True
+                    impact = True
+                    break
+            
+            px += dx * 1
+            py += dy * 1
+        
+        px = self.agent.gun.x
+        py = self.agent.gun.y
+        dx = math.cos(self.agent.gun.angle - 30)
+        dy = math.sin(self.agent.gun.angle - 30)
+
+        impact = False
+
+        while not impact and 0 <= px < RENDER_WIDTH and 0 <= py < RENDER_HEIGHT:
+            for enemy in self.enemies:
+                if enemy:
+                    if circleCollision(px, py, self.agent.gun.radius, enemy.x, enemy.y, enemy.radius):
+                        rightAimEnemy = True
+                        impact = True
+        
+            # colision with an obstacle
+            for rect in self.objects:
+                if circle_rect_collision(px, py, self.agent.gun.radius, rect.left, rect.top, rect.width, rect.height):
+                    rightAimEnemy = False
+                    rightAimObject = True
+                    impact = True
+                    break
+            
+            px += dx * 1
+            py += dy * 1
         
         for projectile in self.agent.gun.projectiles:
             # Calculate the trajectory of the projectile
@@ -222,21 +273,38 @@ class TPS(gym.Env):
                 next_state.append(-1)
                 next_state.append(-1)
 
-        # object
-        next_state.append(self.objects[0].left)
-        next_state.append(self.objects[0].top)
-        next_state.append(self.objects[0].width)
-        next_state.append(self.objects[0].height)
-        # object 2
-        next_state.append(-1)
-        next_state.append(-1)
-        next_state.append(-1)
-        next_state.append(-1)
-
-        if aim == True:
+        # frontal sensor
+        if aimEnemy == True:
+            next_state.append(1)
+            next_state.append(0)
+        elif aimObject == True:
+            next_state.append(0)
             next_state.append(1)
         else:
-            next_state.append(-1)
+            next_state.append(0)
+            next_state.append(0)
+        
+        # 30º sensor
+        if leftAimEnemy == True:
+            next_state.append(1)
+            next_state.append(0)
+        elif leftAimObject == True:
+            next_state.append(0)
+            next_state.append(1)
+        else:
+            next_state.append(0)
+            next_state.append(0)
+        
+        # -30º sensor
+        if rightAimEnemy == True:
+            next_state.append(1)
+            next_state.append(0)
+        elif rightAimObject == True:
+            next_state.append(0)
+            next_state.append(1)
+        else:
+            next_state.append(0)
+            next_state.append(0)
 
         done = self.verify_episode_end()
         return next_state, reward, done, {}
