@@ -24,7 +24,7 @@ MAX_STEP = 80
 class TPS(gym.Env):
     def __init__(self, render_mode='human'):
         self.action_space = gym.spaces.Box(low=-1, high=1, shape=(2,))
-        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(11,))
+        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(15,))
         self.render_mode = render_mode
 
         if render_mode == 'human':
@@ -81,6 +81,10 @@ class TPS(gym.Env):
             state.append(float(enemy.y) / RENDER_HEIGHT)
 
 
+        state.append(0)
+        state.append(0)
+        state.append(0)
+        state.append(0)
         state.append(0)
         state.append(0)
         state.append(0)
@@ -146,6 +150,10 @@ class TPS(gym.Env):
         leftAimObject = False
         rightAimEnemy = False
         rightAimObject = False
+        leftCloseAimEnemy = False
+        leftCloseAimObject = False
+        rightCloseAimEnemy = False
+        rightCloseAimObject = False
 
 
         px = self.agent.gun.x
@@ -197,6 +205,31 @@ class TPS(gym.Env):
         
         px = self.agent.gun.x
         py = self.agent.gun.y
+        dx = math.cos(self.agent.gun.angle + 15)
+        dy = math.sin(self.agent.gun.angle + 15)
+
+        impact = False
+
+        while not impact and 0 <= px < RENDER_WIDTH and 0 <= py < RENDER_HEIGHT:
+            for enemy in self.enemies:
+                if enemy:
+                    if circleCollision(px, py, self.agent.gun.radius, enemy.x, enemy.y, enemy.radius):
+                        leftCloseAimEnemy = True
+                        impact = True
+        
+            # colision with an obstacle
+            for rect in self.objects:
+                if circle_rect_collision(px, py, self.agent.gun.radius, rect.left, rect.top, rect.width, rect.height):
+                    leftCloseAimEnemy = False
+                    leftCloseAimObject = True
+                    impact = True
+                    break
+            
+            px += dx * 1
+            py += dy * 1
+        
+        px = self.agent.gun.x
+        py = self.agent.gun.y
         dx = math.cos(self.agent.gun.angle - 30)
         dy = math.sin(self.agent.gun.angle - 30)
 
@@ -214,6 +247,31 @@ class TPS(gym.Env):
                 if circle_rect_collision(px, py, self.agent.gun.radius, rect.left, rect.top, rect.width, rect.height):
                     rightAimEnemy = False
                     rightAimObject = True
+                    impact = True
+                    break
+            
+            px += dx * 1
+            py += dy * 1
+        
+        px = self.agent.gun.x
+        py = self.agent.gun.y
+        dx = math.cos(self.agent.gun.angle - 15)
+        dy = math.sin(self.agent.gun.angle - 15)
+
+        impact = False
+
+        while not impact and 0 <= px < RENDER_WIDTH and 0 <= py < RENDER_HEIGHT:
+            for enemy in self.enemies:
+                if enemy:
+                    if circleCollision(px, py, self.agent.gun.radius, enemy.x, enemy.y, enemy.radius):
+                        rightCloseAimEnemy = True
+                        impact = True
+        
+            # colision with an obstacle
+            for rect in self.objects:
+                if circle_rect_collision(px, py, self.agent.gun.radius, rect.left, rect.top, rect.width, rect.height):
+                    rightCloseAimEnemy = False
+                    rightCloseAimObject = True
                     impact = True
                     break
             
@@ -300,6 +358,28 @@ class TPS(gym.Env):
             next_state.append(1)
             next_state.append(0)
         elif rightAimObject == True:
+            next_state.append(0)
+            next_state.append(1)
+        else:
+            next_state.append(0)
+            next_state.append(0)
+        
+        # 15º sensor
+        if leftCloseAimEnemy == True:
+            next_state.append(1)
+            next_state.append(0)
+        elif leftCloseAimObject == True:
+            next_state.append(0)
+            next_state.append(1)
+        else:
+            next_state.append(0)
+            next_state.append(0)
+        
+        # -15º sensor
+        if rightCloseAimEnemy == True:
+            next_state.append(1)
+            next_state.append(0)
+        elif rightCloseAimObject == True:
             next_state.append(0)
             next_state.append(1)
         else:
