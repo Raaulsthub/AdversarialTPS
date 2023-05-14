@@ -24,7 +24,7 @@ MAX_STEP = 80
 class TPS(gym.Env):
     def __init__(self, render_mode='human'):
         self.action_space = gym.spaces.Box(low=-1, high=1, shape=(2,))
-        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(15,))
+        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(24,))
         self.render_mode = render_mode
 
         if render_mode == 'human':
@@ -79,18 +79,11 @@ class TPS(gym.Env):
         for enemy in self.enemies:
             state.append(float(enemy.x) / RENDER_WIDTH)
             state.append(float(enemy.y) / RENDER_HEIGHT)
+            state.append(math.sqrt((self.agent.x - enemy.x) ** 2 + (self.agent.y - enemy.y) ** 2))
 
 
-        state.append(0)
-        state.append(0)
-        state.append(0)
-        state.append(0)
-        state.append(0)
-        state.append(0)
-        state.append(0)
-        state.append(0)
-        state.append(0)
-        state.append(0)
+        for i in range(18):
+            state.append(0)
 
         self.shoot_delay = BULLET_ACTION_DELAY
     
@@ -105,11 +98,40 @@ class TPS(gym.Env):
         self.agent.gun.angle += action[0] * ANGLE_INCREMENT
         if action[1] > 0 and self.shoot_delay <= 0:
             reward += 1
-            self.agent.gun.shoot()
+            self.agent.gun.shoot(self.agent.x, self.agent.y)
             self.shoot_delay = BULLET_ACTION_DELAY
 
         self.shoot_delay -= 1
         return reward
+    
+    def sensors(self, angle):
+        aimEnemy = False
+        aimObject = True
+        impact = False
+
+        px = self.agent.gun.x
+        py = self.agent.gun.y
+        dx = math.cos(angle)
+        dy = math.sin(angle)
+
+        while not impact and 0 <= px < RENDER_WIDTH and 0 <= py < RENDER_HEIGHT:
+            for enemy in self.enemies:
+                if enemy:
+                    if circleCollision(px, py, self.agent.gun.radius, enemy.x, enemy.y, enemy.radius):
+                        aimEnemy = True
+                        impact = True
+        
+            # colision with an obstacle
+            for rect in self.objects:
+                if circle_rect_collision(px, py, self.agent.gun.radius, rect.left, rect.top, rect.width, rect.height):
+                    aimEnemy = False
+                    aimObject = True
+                    impact = True
+                    break
+            
+            px += dx * 1
+            py += dy * 1
+        return aimEnemy, aimObject
 
     
     def verify_episode_end(self):
@@ -143,140 +165,19 @@ class TPS(gym.Env):
        # check if player is pointing at the enemies direction
         self.agent.updateGunPosition()
         # verify aimEnemy
-        impact = False
-        aimEnemy = False
-        aimObject = False
-        leftAimEnemy = False
-        leftAimObject = False
-        rightAimEnemy = False
-        rightAimObject = False
-        leftCloseAimEnemy = False
-        leftCloseAimObject = False
-        rightCloseAimEnemy = False
-        rightCloseAimObject = False
-
-
-        px = self.agent.gun.x
-        py = self.agent.gun.y
-        dx = math.cos(self.agent.gun.angle)
-        dy = math.sin(self.agent.gun.angle)
-
-        while not impact and 0 <= px < RENDER_WIDTH and 0 <= py < RENDER_HEIGHT:
-            for enemy in self.enemies:
-                if enemy:
-                    if circleCollision(px, py, self.agent.gun.radius, enemy.x, enemy.y, enemy.radius):
-                        aimEnemy = True
-                        impact = True
         
-            # colision with an obstacle
-            for rect in self.objects:
-                if circle_rect_collision(px, py, self.agent.gun.radius, rect.left, rect.top, rect.width, rect.height):
-                    aimEnemy = False
-                    impact = True
-                    break
-            
-            px += dx * 1
-            py += dy * 1
-        
-        px = self.agent.gun.x
-        py = self.agent.gun.y
-        dx = math.cos(self.agent.gun.angle + 30)
-        dy = math.sin(self.agent.gun.angle + 30)
+        aimEnemy = [False] * 9
+        aimObject = [False] * 9
 
-        impact = False
-
-        while not impact and 0 <= px < RENDER_WIDTH and 0 <= py < RENDER_HEIGHT:
-            for enemy in self.enemies:
-                if enemy:
-                    if circleCollision(px, py, self.agent.gun.radius, enemy.x, enemy.y, enemy.radius):
-                        leftAimEnemy = True
-                        impact = True
-        
-            # colision with an obstacle
-            for rect in self.objects:
-                if circle_rect_collision(px, py, self.agent.gun.radius, rect.left, rect.top, rect.width, rect.height):
-                    leftAimEnemy = False
-                    leftAimObject = True
-                    impact = True
-                    break
-            
-            px += dx * 1
-            py += dy * 1
-        
-        px = self.agent.gun.x
-        py = self.agent.gun.y
-        dx = math.cos(self.agent.gun.angle + 15)
-        dy = math.sin(self.agent.gun.angle + 15)
-
-        impact = False
-
-        while not impact and 0 <= px < RENDER_WIDTH and 0 <= py < RENDER_HEIGHT:
-            for enemy in self.enemies:
-                if enemy:
-                    if circleCollision(px, py, self.agent.gun.radius, enemy.x, enemy.y, enemy.radius):
-                        leftCloseAimEnemy = True
-                        impact = True
-        
-            # colision with an obstacle
-            for rect in self.objects:
-                if circle_rect_collision(px, py, self.agent.gun.radius, rect.left, rect.top, rect.width, rect.height):
-                    leftCloseAimEnemy = False
-                    leftCloseAimObject = True
-                    impact = True
-                    break
-            
-            px += dx * 1
-            py += dy * 1
-        
-        px = self.agent.gun.x
-        py = self.agent.gun.y
-        dx = math.cos(self.agent.gun.angle - 30)
-        dy = math.sin(self.agent.gun.angle - 30)
-
-        impact = False
-
-        while not impact and 0 <= px < RENDER_WIDTH and 0 <= py < RENDER_HEIGHT:
-            for enemy in self.enemies:
-                if enemy:
-                    if circleCollision(px, py, self.agent.gun.radius, enemy.x, enemy.y, enemy.radius):
-                        rightAimEnemy = True
-                        impact = True
-        
-            # colision with an obstacle
-            for rect in self.objects:
-                if circle_rect_collision(px, py, self.agent.gun.radius, rect.left, rect.top, rect.width, rect.height):
-                    rightAimEnemy = False
-                    rightAimObject = True
-                    impact = True
-                    break
-            
-            px += dx * 1
-            py += dy * 1
-        
-        px = self.agent.gun.x
-        py = self.agent.gun.y
-        dx = math.cos(self.agent.gun.angle - 15)
-        dy = math.sin(self.agent.gun.angle - 15)
-
-        impact = False
-
-        while not impact and 0 <= px < RENDER_WIDTH and 0 <= py < RENDER_HEIGHT:
-            for enemy in self.enemies:
-                if enemy:
-                    if circleCollision(px, py, self.agent.gun.radius, enemy.x, enemy.y, enemy.radius):
-                        rightCloseAimEnemy = True
-                        impact = True
-        
-            # colision with an obstacle
-            for rect in self.objects:
-                if circle_rect_collision(px, py, self.agent.gun.radius, rect.left, rect.top, rect.width, rect.height):
-                    rightCloseAimEnemy = False
-                    rightCloseAimObject = True
-                    impact = True
-                    break
-            
-            px += dx * 1
-            py += dy * 1
+        aimEnemy[0], aimObject[0] = self.sensors(self.agent.gun.angle)
+        aimEnemy[1], aimObject[1] = self.sensors(self.agent.gun.angle + 30)
+        aimEnemy[2], aimObject[2] = self.sensors(self.agent.gun.angle - 30)
+        aimEnemy[3], aimObject[3] = self.sensors(self.agent.gun.angle + 15)
+        aimEnemy[4], aimObject[4] = self.sensors(self.agent.gun.angle - 15)
+        aimEnemy[5], aimObject[5] = self.sensors(self.agent.gun.angle + 7.5)
+        aimEnemy[6], aimObject[6] = self.sensors(self.agent.gun.angle - 7.5)
+        aimEnemy[7], aimObject[7] = self.sensors(self.agent.gun.angle + 22.5)
+        aimEnemy[8], aimObject[8] = self.sensors(self.agent.gun.angle - 22.5)
         
         for projectile in self.agent.gun.projectiles:
             # Calculate the trajectory of the projectile
@@ -316,8 +217,6 @@ class TPS(gym.Env):
                 if projectile:
                     self.agent.gun.projectiles.remove(projectile)
 
-
-
         next_state = []
 
         next_state.append(float(self.agent.x) / RENDER_WIDTH)
@@ -327,64 +226,25 @@ class TPS(gym.Env):
             if enemy:
                 next_state.append(float(enemy.x) / RENDER_WIDTH)
                 next_state.append(float(enemy.y) / RENDER_HEIGHT)
+                next_state.append(math.sqrt((self.agent.x - enemy.x) ** 2 + (self.agent.y - enemy.y) ** 2))
             else:
                 next_state.append(-1)
                 next_state.append(-1)
+                next_state.append(-1)
 
-        # frontal sensor
-        if aimEnemy == True:
-            next_state.append(1)
-            next_state.append(0)
-        elif aimObject == True:
-            next_state.append(0)
-            next_state.append(1)
-        else:
-            next_state.append(0)
-            next_state.append(0)
-        
-        # 30º sensor
-        if leftAimEnemy == True:
-            next_state.append(1)
-            next_state.append(0)
-        elif leftAimObject == True:
-            next_state.append(0)
-            next_state.append(1)
-        else:
-            next_state.append(0)
-            next_state.append(0)
-        
-        # -30º sensor
-        if rightAimEnemy == True:
-            next_state.append(1)
-            next_state.append(0)
-        elif rightAimObject == True:
-            next_state.append(0)
-            next_state.append(1)
-        else:
-            next_state.append(0)
-            next_state.append(0)
-        
-        # 15º sensor
-        if leftCloseAimEnemy == True:
-            next_state.append(1)
-            next_state.append(0)
-        elif leftCloseAimObject == True:
-            next_state.append(0)
-            next_state.append(1)
-        else:
-            next_state.append(0)
-            next_state.append(0)
-        
-        # -15º sensor
-        if rightCloseAimEnemy == True:
-            next_state.append(1)
-            next_state.append(0)
-        elif rightCloseAimObject == True:
-            next_state.append(0)
-            next_state.append(1)
-        else:
-            next_state.append(0)
-            next_state.append(0)
+        for i in range(len(aimEnemy)):
+            if aimEnemy[i] == True:
+                next_state.append(1)
+                next_state.append(0)
+            elif aimObject[i] == True:
+                next_state.append(0)
+                next_state.append(1)
+            else:
+                next_state.append(0)
+                next_state.append(0)
+            # print()
+            # print(aimEnemy[i])
+            # print(aimObject[i])
 
         done = self.verify_episode_end()
         return next_state, reward, done, {}

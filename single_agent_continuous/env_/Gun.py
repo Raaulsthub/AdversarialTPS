@@ -12,6 +12,6 @@ class Gun:
         self.y = y 
         self.time_since_last_shot = 0
 
-    def shoot(self):
-        self.projectiles.append(Projectile(self.radius, self.angle, self.x, self.y))
+    def shoot(self, x, y):
+        self.projectiles.append(Projectile(self.radius, self.angle, x, y))
         self.time_since_last_shot = time.time()

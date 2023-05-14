@@ -15,7 +15,10 @@ if __name__ == '__main__':
     n_games = 100
     score_history = []
 
-    agent.load_models()
+    load_checkpoint = False
+
+    if load_checkpoint:
+        agent.load_models()
 
     avg_scores = []
     
